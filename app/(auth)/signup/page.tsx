@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
+type SignupErrorResponse = {
+  error?: string
+}
+
 export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -21,7 +25,8 @@ export default function SignupPage() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
-      return setLoading(false)
+      setLoading(false)
+      return
     }
 
     const payload = {
@@ -37,8 +42,10 @@ export default function SignupPage() {
     })
 
     if (!signupRes.ok) {
-      setError("Unable to sign up. Try another email.")
-      return setLoading(false)
+      const body = (await signupRes.json().catch(() => ({}))) as SignupErrorResponse
+      setError(body.error || "Unable to sign up. Try another email.")
+      setLoading(false)
+      return
     }
 
     await signIn("credentials", {

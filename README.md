@@ -82,6 +82,45 @@ npm run start
 - Run `npm run db:deploy` during release/deploy phase.
 - Protected routes are handled by `proxy.ts`.
 
+
+
+## Operational Checks
+
+Use these checks after deployment to confirm frontend, backend, and DB are all healthy:
+
+1. Frontend page loads:
+```bash
+curl -I https://<your-domain>/login
+```
+
+2. Backend DB connectivity:
+```bash
+curl https://<your-domain>/api/health/db
+```
+
+Expected success response:
+```json
+{ "ok": true, "message": "Database connection successful" }
+```
+
+If this fails, verify `DATABASE_URL` and Neon network access/SSL settings first.
+
+## Neon Database Notes
+
+Use your Neon pooled connection string in `DATABASE_URL` (with SSL enabled), for example:
+
+```env
+DATABASE_URL="postgresql://<user>:<password>@<endpoint>/<db>?sslmode=require&pgbouncer=true&connect_timeout=15"
+```
+
+If signup fails, the API now returns explicit errors (duplicate email vs DB connection issue), which helps diagnose Neon config quickly.
+
+To verify user creation in Neon directly:
+
+```sql
+select id, email, "orgId" from "User" order by id desc limit 20;
+```
+
 ## License
 
 MIT – see [LICENSE](./LICENSE).
