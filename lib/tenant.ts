@@ -1,13 +1,15 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 
-export async function getTenant(){
+export async function getTenant() {
+  const session = (await getServerSession(authOptions)) as
+    | { user?: { orgId?: string } }
+    | null
 
- const session: any = await getServerSession(authOptions)
+  const orgId = session?.user?.orgId
+  if (!orgId) {
+    throw new Error("Unauthorized")
+  }
 
- if (!session) {
-  throw new Error("Unauthorized")
- }
-
- return session.user.orgId
+  return orgId
 }
