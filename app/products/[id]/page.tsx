@@ -1,90 +1,62 @@
-import { prisma } from "@/lib/prisma"
-import { getTenant } from "@/lib/tenant"
-import { notFound } from "next/navigation"
+"use client"
 
-interface PageProps {
- params: {
-  id: string
- }
+import { FormEvent, useEffect, useState } from "react"
+import { useParams } from "next/navigation"
+
+type Product = {
+  name: string
+  sku: string
+  description: string | null
+  quantity: number
+  costPrice: number | null
+  sellPrice: number | null
+  lowStock: number | null
 }
 
-export default async function ProductPage({ params }: PageProps) {
+export default function ProductDetailPage() {
+  const params = useParams<{ id: string }>()
+  const [product, setProduct] = useState<Product | null>(null)
 
- const orgId = await getTenant()
+  useEffect(() => {
+    fetch(`/api/products/${params.id}`).then(async (res) => {
+      if (res.ok) setProduct(await res.json())
+    })
+  }, [params.id])
 
- const product = await prisma.product.findFirst({
-  where: {
-   id: params.id,
-   orgId: orgId
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+
+    await fetch(`/api/products/${params.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: form.get("name"),
+        sku: form.get("sku"),
+        description: form.get("description") || null,
+        quantity: Number(form.get("quantity") || 0),
+        costPrice: form.get("costPrice") ? Number(form.get("costPrice")) : null,
+        sellPrice: form.get("sellPrice") ? Number(form.get("sellPrice")) : null,
+        lowStock: form.get("lowStock") ? Number(form.get("lowStock")) : null,
+      }),
+    })
+
+    window.location.href = "/products"
   }
- })
 
- if (!product) {
-  notFound()
- }
+  if (!product) return <p>Loading product...</p>
 
- return (
-  <div className="p-8 max-w-3xl mx-auto">
-
-   <h1 className="text-3xl font-bold mb-6">
-    Product Details
-   </h1>
-
-   <div className="bg-white shadow rounded-xl p-6 space-y-4">
-
-    <div>
-     <p className="text-sm text-gray-500">Product Name</p>
-     <p className="text-lg font-semibold">{product.name}</p>
-    </div>
-
-    <div>
-     <p className="text-sm text-gray-500">SKU</p>
-     <p className="text-lg">{product.sku}</p>
-    </div>
-
-    <div>
-     <p className="text-sm text-gray-500">Description</p>
-     <p>{product.description || "No description provided"}</p>
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-
-     <div>
-      <p className="text-sm text-gray-500">Quantity</p>
-      <p className="text-lg font-semibold">
-       {product.quantity}
-      </p>
-     </div>
-
-     <div>
-      <p className="text-sm text-gray-500">Low Stock Alert</p>
-      <p className="text-lg">
-       {product.lowStock || 5}
-      </p>
-     </div>
-
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-
-     <div>
-      <p className="text-sm text-gray-500">Cost Price</p>
-      <p>₹ {product.costPrice || 0}</p>
-     </div>
-
-     <div>
-      <p className="text-sm text-gray-500">Selling Price</p>
-      <p>₹ {product.sellPrice || 0}</p>
-     </div>
-
-    </div>
-
-    <div className="pt-4 text-sm text-gray-400">
-     Created: {product.createdAt.toLocaleDateString()}
-    </div>
-
-   </div>
-
-  </div>
- )
+  return (
+    <form onSubmit={submit} className="mx-auto max-w-xl space-y-3 rounded bg-white p-5 shadow">
+      <h1 className="text-2xl font-semibold">Edit Product</h1>
+      <input defaultValue={product.name} name="name" required className="w-full rounded border p-2" />
+      <input defaultValue={product.sku} name="sku" required className="w-full rounded border p-2" />
+      <textarea defaultValue={product.description ?? ""} name="description" className="w-full rounded border p-2" />
+      <input defaultValue={product.quantity} name="quantity" required min={0} type="number" className="w-full rounded border p-2" />
+      <input defaultValue={product.costPrice ?? ""} name="costPrice" min={0} step="0.01" type="number" className="w-full rounded border p-2" />
+      <input defaultValue={product.sellPrice ?? ""} name="sellPrice" min={0} step="0.01" type="number" className="w-full rounded border p-2" />
+      <input defaultValue={product.lowStock ?? ""} name="lowStock" min={0} type="number" className="w-full rounded border p-2" />
+      <button className="rounded bg-black px-4 py-2 text-white">Update</button>
+    </form>
+  )
 }

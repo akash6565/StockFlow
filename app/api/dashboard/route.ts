@@ -1,29 +1,25 @@
-import { prisma } from "@/lib/prisma"
+import { getPrisma } from "@/lib/prisma"
 import { getTenant } from "@/lib/tenant"
 
 export async function GET() {
+  const orgId = await getTenant()
 
- const orgId = await getTenant()
+  const prisma = await getPrisma()
 
- const products =
-  await prisma.product.findMany({
-   where: { orgId }
-  })
+  const [products, settings] = await Promise.all([
+    prisma.product.findMany({ where: { orgId }, orderBy: { quantity: "asc" } }),
+    prisma.setting.findUnique({ where: { orgId } }),
+  ])
 
- const totalProducts = products.length
-
- const totalQuantity =
-  products.reduce(
-   (sum: any, p: { quantity: any }) => sum + p.quantity,
-   0
+  const defaultThreshold = settings?.defaultLowStock ?? 5
+  const lowStock = products.filter(
+    (product) => product.quantity <= (product.lowStock ?? defaultThreshold),
   )
 
- const lowStock =
-  products.filter((p: { quantity: number }) => p.quantity <= 5)
-
- return Response.json({
-  totalProducts,
-  totalQuantity,
-  lowStock
- })
+  return Response.json({
+    totalProducts: products.length,
+    totalQuantity: products.reduce((sum, product) => sum + product.quantity, 0),
+    lowStock,
+    defaultThreshold,
+  })
 }
