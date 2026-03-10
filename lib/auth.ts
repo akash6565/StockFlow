@@ -2,7 +2,7 @@ import { compare } from "bcrypt"
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { getNextAuthUrl, validateNextAuthUrl } from "@/lib/env"
-import { getPrisma } from "@/lib/prisma"
+import { eq, getDb, users } from "@/lib/db"
 
 const nextAuthUrl = getNextAuthUrl()
 
@@ -23,11 +23,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Missing credentials")
         }
 
-        const prisma = await getPrisma()
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        })
+        const db = getDb()
+        const email = credentials.email.toLowerCase().trim()
+        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
 
         if (!user) return null
 

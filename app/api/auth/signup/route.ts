@@ -1,7 +1,6 @@
 import { hash } from "bcrypt"
-import { Prisma } from "@prisma/client"
 import { z } from "zod"
-import { getPrisma } from "@/lib/prisma"
+import { eq, getDb, organizations, settings, users } from "@/lib/db"
 
 const signupSchema = z
   .object({
@@ -14,41 +13,27 @@ const signupSchema = z
 export async function POST(req: Request) {
   try {
     const payload = signupSchema.parse(await req.json())
-    const prisma = await getPrisma()
+    const db = getDb()
     const email = payload.email.toLowerCase()
     const passwordHash = await hash(payload.password, 10)
 
-    const organization = await prisma.organization.create({
-      data: {
-        name: payload.organizationName,
-        settings: { create: { defaultLowStock: 5 } },
-        users: { create: { email, password: passwordHash } },
-      },
-      include: {
-        users: { select: { id: true, email: true } },
-      },
-    })
-
-    const user = organization.users[0]
-    return Response.json({ id: user.id, email: user.email }, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return Response.json({ error: "Invalid signup input", details: error.flatten() }, { status: 400 })
-    }
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1)
+    if (existing) {
       return Response.json({ error: "Email already registered" }, { status: 409 })
     }
 
-    if (error instanceof Prisma.PrismaClientInitializationError) {
-      return Response.json(
-        {
-          error: "Database connection failed.",
-          details:
-            "Verify DATABASE_URL, ensure Neon SSL is enabled (sslmode=require), and URL-encode special password characters like @ as %40.",
-        },
-        { status: 500 },
-      )
+    const [organization] = await db.insert(organizations).values({ name: payload.organizationName }).returning()
+    await db.insert(settings).values({ orgId: organization.id, defaultLowStock: 5 })
+
+    const [user] = await db
+      .insert(users)
+      .values({ email, password: passwordHash, orgId: organization.id })
+      .returning({ id: users.id, email: users.email })
+
+    return Response.json(user, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Response.json({ error: "Invalid signup input", details: error.flatten() }, { status: 400 })
     }
 
     console.error("Signup failed", error)

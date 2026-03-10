@@ -1,5 +1,5 @@
 import { getDatabaseUrl, getNextAuthUrl, validateDatabaseUrl, validateNextAuthUrl } from "@/lib/env"
-import { getPrisma } from "@/lib/prisma"
+import { dbHealthcheck } from "@/lib/db"
 
 export async function GET() {
   try {
@@ -19,8 +19,7 @@ export async function GET() {
       validateNextAuthUrl(nextAuthUrl)
     }
 
-    const prisma = await getPrisma()
-    await prisma.$queryRaw`SELECT 1`
+    await dbHealthcheck()
 
     return Response.json({ ok: true, message: "Database connection successful" })
   } catch (error) {

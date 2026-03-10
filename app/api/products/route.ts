@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { getPrisma } from "@/lib/prisma"
+import { desc, eq, getDb, products } from "@/lib/db"
 import { getTenant } from "@/lib/tenant"
 
 const productSchema = z.object({
@@ -14,28 +14,21 @@ const productSchema = z.object({
 
 export async function GET() {
   const orgId = await getTenant()
-  const prisma = await getPrisma()
-  const products = await prisma.product.findMany({
-    where: { orgId },
-    orderBy: { createdAt: "desc" },
-  })
-
-  return Response.json(products)
+  const db = getDb()
+  const rows = await db.select().from(products).where(eq(products.orgId, orgId)).orderBy(desc(products.createdAt))
+  return Response.json(rows)
 }
 
 export async function POST(req: Request) {
   const orgId = await getTenant()
-
-  const prisma = await getPrisma()
+  const db = getDb()
 
   try {
     const body = productSchema.parse(await req.json())
-    const product = await prisma.product.create({
-      data: {
-        ...body,
-        orgId,
-      },
-    })
+    const [product] = await db
+      .insert(products)
+      .values({ ...body, orgId, description: body.description ?? null, costPrice: body.costPrice ?? null, sellPrice: body.sellPrice ?? null, lowStock: body.lowStock ?? null })
+      .returning()
 
     return Response.json(product, { status: 201 })
   } catch {

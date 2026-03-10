@@ -1,6 +1,6 @@
 # StockFlow MVP
 
-A modern, scope-reduced **SaaS Inventory Management MVP** built with Next.js App Router, NextAuth, Prisma, and Tailwind (shadcn-style UI components).
+A modern, scope-reduced **SaaS Inventory Management MVP** built with Next.js App Router, NextAuth, Drizzle ORM, and Tailwind (shadcn-style UI components).
 
 ## Features (MVP)
 
@@ -26,14 +26,13 @@ A modern, scope-reduced **SaaS Inventory Management MVP** built with Next.js App
 - **UI:** shadcn-inspired local component kit (`components/ui/*`)
 - **Auth:** NextAuth (credentials)
 - **Validation:** Zod
-- **Database:** PostgreSQL + Prisma ORM
+- **Database:** PostgreSQL + Neon + Drizzle ORM
 
 ## Project Structure
 
 - `app/` – Pages and API routes
 - `components/ui/` – Reusable UI primitives (button, input, card, etc.)
-- `lib/` – Shared server utilities (auth, prisma, tenant)
-- `prisma/` – Schema + migrations
+- `lib/` – Shared server utilities (auth, db, tenant)
 
 ## Local Development
 
@@ -53,13 +52,7 @@ NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 NEXTAUTH_URL="https://your-domain.com"
 ```
 
-### 3) Apply migrations
-
-```bash
-npm run db:deploy
-```
-
-### 4) Run app
+### 3) Run app
 
 ```bash
 npm run dev
@@ -74,8 +67,6 @@ npm run build
 npm run start
 ```
 
-`postinstall` automatically runs `prisma generate`.
-
 ## Deployment Notes
 
 - Set `DATABASE_URL` (preferred), `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
@@ -83,7 +74,6 @@ npm run start
   - In production, set `NEXTAUTH_URL` to your deployed HTTPS domain (not `localhost`).
   - If `NEXTAUTH_URL` is accidentally set to localhost on Vercel, the app now falls back to `VERCEL_URL`.
   - If your DB password has special characters (for example `@`), URL-encode it in `DATABASE_URL`.
-- Run `npm run db:deploy` during release/deploy phase.
 - Protected routes are handled by `proxy.ts`.
 
 

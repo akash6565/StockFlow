@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { getPrisma } from "@/lib/prisma"
+import { and, eq, getDb, products } from "@/lib/db"
 import { getTenant } from "@/lib/tenant"
 
 const updateSchema = z.object({
@@ -15,9 +15,9 @@ const updateSchema = z.object({
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const orgId = await getTenant()
   const { id } = await params
-  const prisma = await getPrisma()
+  const db = getDb()
 
-  const product = await prisma.product.findFirst({ where: { id, orgId } })
+  const [product] = await db.select().from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
   if (!product) return Response.json({ error: "Not found" }, { status: 404 })
   return Response.json(product)
 }
@@ -25,14 +25,19 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const orgId = await getTenant()
   const { id } = await params
-  const prisma = await getPrisma()
+  const db = getDb()
 
   try {
     const body = updateSchema.parse(await req.json())
-    const existing = await prisma.product.findFirst({ where: { id, orgId } })
-    if (!existing) return Response.json({ error: "Not found" }, { status: 404 })
+    const existing = await db.select({ id: products.id }).from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
+    if (!existing.length) return Response.json({ error: "Not found" }, { status: 404 })
 
-    const product = await prisma.product.update({ where: { id }, data: body })
+    const [product] = await db
+      .update(products)
+      .set({ ...body, description: body.description ?? null, costPrice: body.costPrice ?? null, sellPrice: body.sellPrice ?? null, lowStock: body.lowStock ?? null })
+      .where(eq(products.id, id))
+      .returning()
+
     return Response.json(product)
   } catch {
     return Response.json({ error: "Invalid payload or duplicate SKU" }, { status: 400 })
@@ -42,11 +47,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const orgId = await getTenant()
   const { id } = await params
-  const prisma = await getPrisma()
+  const db = getDb()
 
-  const existing = await prisma.product.findFirst({ where: { id, orgId } })
-  if (!existing) return Response.json({ error: "Not found" }, { status: 404 })
+  const existing = await db.select({ id: products.id }).from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
+  if (!existing.length) return Response.json({ error: "Not found" }, { status: 404 })
 
-  await prisma.product.delete({ where: { id } })
+  await db.delete(products).where(eq(products.id, id))
   return new Response(null, { status: 204 })
 }
