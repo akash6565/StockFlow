@@ -1,27 +1,120 @@
-# StockFlow Backend (Express + Drizzle-ready)
+# StockFlow MVP
 
-This project has been simplified to a Node.js backend using Express and Neon PostgreSQL connectivity.
+A modern, scope-reduced **SaaS Inventory Management MVP** built with Next.js App Router, NextAuth, Drizzle ORM, and Tailwind (shadcn-style UI components).
 
-## Stack
+## Features (MVP)
 
-- Node.js
-- Express.js
-- Drizzle ORM (installed for ORM migration)
-- Neon serverless driver
+- Authentication
+  - Email/password signup
+  - Organization created during signup
+  - Login with protected app routes
+- Multi-tenant data isolation
+  - Products and settings are scoped to organization (`orgId`)
+- Product management
+  - Create, list, search, update, and delete products
+  - Fields: name, SKU, description, quantity, cost price, selling price, low-stock threshold
+- Dashboard
+  - Total products
+  - Total quantity on hand
+  - Low-stock list
+- Settings
+  - Default low-stock threshold per organization
 
-## Environment
+## Tech Stack
 
-Create `.env` with:
+- **Frontend:** Next.js 16, React 19, Tailwind CSS v4
+- **UI:** shadcn-inspired local component kit (`components/ui/*`)
+- **Auth:** NextAuth (credentials)
+- **Validation:** Zod
+- **Database:** PostgreSQL + Neon + Drizzle ORM
 
-```env
-DATABASE_URL='postgresql://neondb_owner:npg_Xupht4yGci5v@ep-super-resonance-a46ct7iu-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-```
+## Project Structure
 
-## Run
+- `app/` – Pages and API routes
+- `components/ui/` – Reusable UI primitives (button, input, card, etc.)
+- `lib/` – Shared server utilities (auth, db, tenant)
+
+## Local Development
+
+### 1) Install
 
 ```bash
 npm install
-npm start
 ```
 
-Server starts at `http://localhost:3000` and returns the PostgreSQL version.
+### 2) Configure environment
+
+Create `.env`:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
+NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+NEXTAUTH_URL="https://your-domain.com"
+```
+
+### 3) Run app
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Production Build
+
+```bash
+npm run build
+npm run start
+```
+
+## Deployment Notes
+
+- Set `DATABASE_URL` (preferred), `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
+  - Backward-compatible env names `DATABASEURL` and `databaseurl` are also supported.
+  - In production, set `NEXTAUTH_URL` to your deployed HTTPS domain (not `localhost`).
+  - If `NEXTAUTH_URL` is accidentally set to localhost on Vercel, the app now falls back to `VERCEL_URL`.
+  - If your DB password has special characters (for example `@`), URL-encode it in `DATABASE_URL`.
+- Protected routes are handled by `proxy.ts`.
+
+
+
+## Operational Checks
+
+Use these checks after deployment to confirm frontend, backend, and DB are all healthy:
+
+1. Frontend page loads:
+```bash
+curl -I https://<your-domain>/login
+```
+
+2. Backend DB connectivity:
+```bash
+curl https://<your-domain>/api/health/db
+```
+
+Expected success response:
+```json
+{ "ok": true, "message": "Database connection successful" }
+```
+
+If this fails, verify `DATABASE_URL`, Neon network access, and SSL settings first (`sslmode=require`). If your password contains `@`, replace it with `%40` in the URL.
+
+## Neon Database Notes
+
+Use your Neon pooled connection string in `DATABASE_URL` (with SSL enabled), for example:
+
+```env
+DATABASE_URL="postgresql://<user>:<password>@<endpoint>/<db>?sslmode=require&pgbouncer=true&connect_timeout=15"
+```
+
+If signup fails, the API now returns explicit errors (duplicate email vs DB connection issue), which helps diagnose Neon config quickly.
+
+To verify user creation in Neon directly:
+
+```sql
+select id, email, "orgId" from "User" order by id desc limit 20;
+```
+
+## License
+
+MIT – see [LICENSE](./LICENSE).
