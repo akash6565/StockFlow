@@ -6,15 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "postinstall": "prisma generate",
-    "db:deploy": "prisma migrate deploy"
+    "start:express": "node server.js"
   },
   "dependencies": {
-    "@prisma/client": "^7.4.2",
+    "@neondatabase/serverless": "^0.10.4",
     "bcrypt": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.36.4",
+    "express": "^4.21.2",
     "next": "16.1.6",
     "next-auth": "^4.24.13",
-    "prisma": "^7.4.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zod": "^4.3.6"

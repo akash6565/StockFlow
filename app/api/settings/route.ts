@@ -1,35 +1,43 @@
 import { z } from "zod"
-import { getPrisma } from "@/lib/prisma"
+import { eq, getDb, settings } from "@/lib/db"
 import { getTenant } from "@/lib/tenant"
+import { errorResponse } from "@/lib/api-response"
 
 const settingsSchema = z.object({
   defaultLowStock: z.number().int().min(0),
 })
 
 export async function GET() {
-  const orgId = await getTenant()
-  const prisma = await getPrisma()
-  const settings = await prisma.setting.findUnique({ where: { orgId } })
+  try {
+    const orgId = await getTenant()
+    const db = getDb()
+    const [row] = await db.select().from(settings).where(eq(settings.orgId, orgId)).limit(1)
 
-  return Response.json(settings ?? { defaultLowStock: 5 })
+    return Response.json(row ?? { defaultLowStock: 5 })
+  } catch (error) {
+    return errorResponse(error, "Failed to load settings")
+  }
 }
 
 export async function POST(req: Request) {
-  const orgId = await getTenant()
-
-  const prisma = await getPrisma()
-
   try {
+    const orgId = await getTenant()
+    const db = getDb()
     const body = settingsSchema.parse(await req.json())
 
-    const settings = await prisma.setting.upsert({
-      where: { orgId },
-      update: { defaultLowStock: body.defaultLowStock },
-      create: { orgId, defaultLowStock: body.defaultLowStock },
-    })
+    const [existing] = await db.select({ id: settings.id }).from(settings).where(eq(settings.orgId, orgId)).limit(1)
+    if (existing) {
+      const [updated] = await db
+        .update(settings)
+        .set({ defaultLowStock: body.defaultLowStock })
+        .where(eq(settings.orgId, orgId))
+        .returning()
+      return Response.json(updated)
+    }
 
-    return Response.json(settings)
-  } catch {
-    return Response.json({ error: "Invalid setting value" }, { status: 400 })
+    const [created] = await db.insert(settings).values({ orgId, defaultLowStock: body.defaultLowStock }).returning()
+    return Response.json(created)
+  } catch (error) {
+    return errorResponse(error, "Failed to save settings")
   }
 }

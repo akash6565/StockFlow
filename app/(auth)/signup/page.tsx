@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 
 type SignupErrorResponse = {
   error?: string
+  details?: unknown
 }
 
 export default function SignupPage() {
@@ -43,7 +44,8 @@ export default function SignupPage() {
 
     if (!signupRes.ok) {
       const body = (await signupRes.json().catch(() => ({}))) as SignupErrorResponse
-      setError(body.error || "Unable to sign up. Try another email.")
+      const details = typeof body.details === "string" ? ` (${body.details})` : ""
+      setError((body.error || "Unable to sign up. Try another email.") + details)
       setLoading(false)
       return
     }
