@@ -2,6 +2,9 @@
 
 import { FormEvent, useState } from "react"
 import { signIn } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -18,8 +21,7 @@ export default function SignupPage() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
-      setLoading(false)
-      return
+      return setLoading(false)
     }
 
     const payload = {
@@ -36,8 +38,7 @@ export default function SignupPage() {
 
     if (!signupRes.ok) {
       setError("Unable to sign up. Try another email.")
-      setLoading(false)
-      return
+      return setLoading(false)
     }
 
     await signIn("credentials", {
@@ -48,16 +49,22 @@ export default function SignupPage() {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-md space-y-3 rounded bg-white p-5 shadow">
-      <h1 className="text-2xl font-semibold">Create account</h1>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <input name="organizationName" className="w-full rounded border p-2" placeholder="Organization name" required />
-      <input name="email" type="email" className="w-full rounded border p-2" placeholder="Email" required />
-      <input name="password" type="password" className="w-full rounded border p-2" placeholder="Password (8+ chars)" minLength={8} required />
-      <input name="confirmPassword" type="password" className="w-full rounded border p-2" placeholder="Confirm password" minLength={8} required />
-      <button disabled={loading} className="rounded bg-black px-4 py-2 text-white disabled:opacity-60">
-        {loading ? "Creating..." : "Sign up"}
-      </button>
-    </form>
+    <div className="mx-auto max-w-md">
+      <Card>
+        <CardHeader>
+          <CardTitle>Create your organization</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="space-y-4">
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            <Input name="organizationName" placeholder="Organization name" required />
+            <Input name="email" type="email" placeholder="Email" required />
+            <Input name="password" type="password" placeholder="Password (8+ chars)" minLength={8} required />
+            <Input name="confirmPassword" type="password" placeholder="Confirm password" minLength={8} required />
+            <Button className="w-full" disabled={loading}>{loading ? "Creating..." : "Sign up"}</Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

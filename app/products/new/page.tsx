@@ -1,6 +1,11 @@
 "use client"
 
 import { FormEvent } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function NewProductPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -25,16 +30,20 @@ export default function NewProductPage() {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-xl space-y-3 rounded bg-white p-5 shadow">
-      <h1 className="text-2xl font-semibold">Add Product</h1>
-      <input name="name" required className="w-full rounded border p-2" placeholder="Name" />
-      <input name="sku" required className="w-full rounded border p-2" placeholder="SKU" />
-      <textarea name="description" className="w-full rounded border p-2" placeholder="Description (optional)" />
-      <input name="quantity" required min={0} type="number" className="w-full rounded border p-2" placeholder="Quantity" />
-      <input name="costPrice" min={0} step="0.01" type="number" className="w-full rounded border p-2" placeholder="Cost Price" />
-      <input name="sellPrice" min={0} step="0.01" type="number" className="w-full rounded border p-2" placeholder="Selling Price" />
-      <input name="lowStock" min={0} type="number" className="w-full rounded border p-2" placeholder="Low Stock Threshold" />
-      <button className="rounded bg-black px-4 py-2 text-white">Save</button>
-    </form>
+    <Card className="mx-auto max-w-2xl">
+      <CardHeader><CardTitle>Add Product</CardTitle></CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2"><Label>Name</Label><Input name="name" required /></div>
+          <div><Label>SKU</Label><Input name="sku" required /></div>
+          <div><Label>Quantity</Label><Input name="quantity" required min={0} type="number" /></div>
+          <div><Label>Cost Price</Label><Input name="costPrice" min={0} step="0.01" type="number" /></div>
+          <div><Label>Selling Price</Label><Input name="sellPrice" min={0} step="0.01" type="number" /></div>
+          <div className="sm:col-span-2"><Label>Description</Label><Textarea name="description" /></div>
+          <div><Label>Low Stock Threshold</Label><Input name="lowStock" min={0} type="number" /></div>
+          <div className="sm:col-span-2"><Button>Save Product</Button></div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

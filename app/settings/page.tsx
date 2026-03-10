@@ -1,43 +1,43 @@
 "use client"
 
 import { FormEvent, useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function SettingsPage() {
   const [threshold, setThreshold] = useState(5)
 
   useEffect(() => {
     fetch("/api/settings").then(async (res) => {
-      if (res.ok) {
-        const data = await res.json()
-        setThreshold(data.defaultLowStock ?? 5)
-      }
+      if (res.ok) setThreshold((await res.json()).defaultLowStock ?? 5)
     })
   }, [])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-
     await fetch("/api/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ defaultLowStock: threshold }),
     })
-
-    alert("Saved")
+    alert("Settings saved")
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-md space-y-3 rounded bg-white p-5 shadow">
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <label className="text-sm">Default Low Stock Threshold</label>
-      <input
-        value={threshold}
-        onChange={(e) => setThreshold(Number(e.target.value || 0))}
-        type="number"
-        min={0}
-        className="w-full rounded border p-2"
-      />
-      <button className="rounded bg-black px-4 py-2 text-white">Save</button>
-    </form>
+    <Card className="mx-auto max-w-md">
+      <CardHeader>
+        <CardTitle>Settings</CardTitle>
+        <CardDescription>Global defaults used across low-stock calculations.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-3">
+          <Label>Default Low Stock Threshold</Label>
+          <Input value={threshold} onChange={(e) => setThreshold(Number(e.target.value || 0))} type="number" min={0} />
+          <Button>Save</Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

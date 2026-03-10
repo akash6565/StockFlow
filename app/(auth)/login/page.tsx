@@ -3,6 +3,9 @@
 import Link from "next/link"
 import { FormEvent, useState } from "react"
 import { signIn } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 
 export default function LoginPage() {
   const [error, setError] = useState("")
@@ -19,24 +22,28 @@ export default function LoginPage() {
       callbackUrl: "/dashboard",
     })
 
-    if (result?.error) {
-      setError("Invalid email or password")
-      return
-    }
-
+    if (result?.error) return setError("Invalid email or password")
     window.location.href = "/dashboard"
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-md space-y-3 rounded bg-white p-5 shadow">
-      <h1 className="text-2xl font-semibold">Login</h1>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <input name="email" type="email" className="w-full rounded border p-2" placeholder="Email" required />
-      <input name="password" type="password" className="w-full rounded border p-2" placeholder="Password" required />
-      <button className="rounded bg-black px-4 py-2 text-white">Login</button>
-      <p className="text-sm">
-        New here? <Link className="underline" href="/signup">Create an account</Link>
-      </p>
-    </form>
+    <div className="mx-auto max-w-md">
+      <Card>
+        <CardHeader>
+          <CardTitle>Welcome back</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="space-y-4">
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            <Input name="email" type="email" placeholder="Email" required />
+            <Input name="password" type="password" placeholder="Password" required />
+            <Button className="w-full">Login</Button>
+            <p className="text-sm text-slate-600">
+              New here? <Link className="underline" href="/signup">Create an account</Link>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

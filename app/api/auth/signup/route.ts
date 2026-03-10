@@ -14,7 +14,6 @@ export async function POST(req: Request) {
   try {
     const payload = signupSchema.parse(await req.json())
     const email = payload.email.toLowerCase().trim()
-
     const prisma = await getPrisma()
 
     const existingUser = await prisma.user.findUnique({ where: { email } })
@@ -23,29 +22,15 @@ export async function POST(req: Request) {
     }
 
     const passwordHash = await hash(payload.password, 10)
-
-    const user = await prisma.$transaction(async (tx) => {
-      const org = await tx.organization.create({
-        data: { name: payload.organizationName.trim() },
-      })
-
-      await tx.setting.create({ data: { orgId: org.id, defaultLowStock: 5 } })
-
-      return tx.user.create({
-        data: {
-          email,
-          password: passwordHash,
-          orgId: org.id,
-        },
-      })
-    })
+    const org = await prisma.organization.create({ data: { name: payload.organizationName.trim() } })
+    await prisma.setting.create({ data: { orgId: org.id, defaultLowStock: 5 } })
+    const user = await prisma.user.create({ data: { email, password: passwordHash, orgId: org.id } })
 
     return Response.json({ id: user.id, email: user.email }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json({ error: error.flatten() }, { status: 400 })
     }
-
     return Response.json({ error: "Failed to create account" }, { status: 500 })
   }
 }

@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StockFlow MVP
 
-## Getting Started
+A modern, scope-reduced **SaaS Inventory Management MVP** built with Next.js App Router, NextAuth, Prisma, and Tailwind (shadcn-style UI components).
 
-First, run the development server:
+## Features (MVP)
+
+- Authentication
+  - Email/password signup
+  - Organization created during signup
+  - Login with protected app routes
+- Multi-tenant data isolation
+  - Products and settings are scoped to organization (`orgId`)
+- Product management
+  - Create, list, search, update, and delete products
+  - Fields: name, SKU, description, quantity, cost price, selling price, low-stock threshold
+- Dashboard
+  - Total products
+  - Total quantity on hand
+  - Low-stock list
+- Settings
+  - Default low-stock threshold per organization
+
+## Tech Stack
+
+- **Frontend:** Next.js 16, React 19, Tailwind CSS v4
+- **UI:** shadcn-inspired local component kit (`components/ui/*`)
+- **Auth:** NextAuth (credentials)
+- **Validation:** Zod
+- **Database:** PostgreSQL + Prisma ORM
+
+## Project Structure
+
+- `app/` – Pages and API routes
+- `components/ui/` – Reusable UI primitives (button, input, card, etc.)
+- `lib/` – Shared server utilities (auth, prisma, tenant)
+- `prisma/` – Schema + migrations
+
+## Local Development
+
+### 1) Install
+
+```bash
+npm install
+```
+
+### 2) Configure environment
+
+Create `.env`:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
+NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### 3) Apply migrations
+
+```bash
+npm run db:deploy
+```
+
+### 4) Run app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+`postinstall` automatically runs `prisma generate`.
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Set `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
+- Run `npm run db:deploy` during release/deploy phase.
+- Protected routes are handled by `proxy.ts`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT – see [LICENSE](./LICENSE).
