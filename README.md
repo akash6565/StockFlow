@@ -50,7 +50,7 @@ Create `.env`:
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="https://your-domain.com"
 ```
 
 ### 3) Apply migrations
@@ -79,7 +79,9 @@ npm run start
 ## Deployment Notes
 
 - Set `DATABASE_URL` (preferred), `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
-  - Backward-compatible env names `DATABASEURL` and `databaseurl` are also supported at runtime.
+  - Backward-compatible env names `DATABASEURL` and `databaseurl` are also supported.
+  - In production, `NEXTAUTH_URL` must be your deployed HTTPS domain (not `localhost`).
+  - If your DB password has special characters (for example `@`), URL-encode it in `DATABASE_URL`.
 - Run `npm run db:deploy` during release/deploy phase.
 - Protected routes are handled by `proxy.ts`.
 

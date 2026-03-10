@@ -2,6 +2,17 @@
 // npm install --save-dev prisma dotenv
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
+import { getDatabaseUrl, validateDatabaseUrl } from "./lib/env";
+
+const databaseUrl = getDatabaseUrl();
+
+if (!databaseUrl) {
+  throw new Error(
+    "DATABASE_URL is missing for Prisma CLI. Set DATABASE_URL (preferred) or DATABASEURL/databaseurl.",
+  );
+}
+
+validateDatabaseUrl(databaseUrl);
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -9,6 +20,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"] ?? process.env["DATABASEURL"] ?? process.env["databaseurl"],
+    url: databaseUrl,
   },
 });

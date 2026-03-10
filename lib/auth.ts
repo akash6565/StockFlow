@@ -1,7 +1,14 @@
 import { compare } from "bcrypt"
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { getNextAuthUrl, validateNextAuthUrl } from "@/lib/env"
 import { getPrisma } from "@/lib/prisma"
+
+const nextAuthUrl = getNextAuthUrl()
+
+if (nextAuthUrl) {
+  validateNextAuthUrl(nextAuthUrl)
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
