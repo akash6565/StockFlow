@@ -50,7 +50,7 @@ Create `.env`:
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="https://your-domain.com"
 ```
 
 ### 3) Apply migrations
@@ -78,7 +78,11 @@ npm run start
 
 ## Deployment Notes
 
-- Set `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
+- Set `DATABASE_URL` (preferred), `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
+  - Backward-compatible env names `DATABASEURL` and `databaseurl` are also supported.
+  - In production, set `NEXTAUTH_URL` to your deployed HTTPS domain (not `localhost`).
+  - If `NEXTAUTH_URL` is accidentally set to localhost on Vercel, the app now falls back to `VERCEL_URL`.
+  - If your DB password has special characters (for example `@`), URL-encode it in `DATABASE_URL`.
 - Run `npm run db:deploy` during release/deploy phase.
 - Protected routes are handled by `proxy.ts`.
 
@@ -103,7 +107,7 @@ Expected success response:
 { "ok": true, "message": "Database connection successful" }
 ```
 
-If this fails, verify `DATABASE_URL` and Neon network access/SSL settings first.
+If this fails, verify `DATABASE_URL`, Neon network access, and SSL settings first (`sslmode=require`). If your password contains `@`, replace it with `%40` in the URL.
 
 ## Neon Database Notes
 

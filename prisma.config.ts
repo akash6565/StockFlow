@@ -2,6 +2,14 @@
 // npm install --save-dev prisma dotenv
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
+import { getDatabaseUrl, validateDatabaseUrl } from "./lib/env";
+
+const databaseUrl = getDatabaseUrl();
+const prismaCliUrl = databaseUrl ?? "postgresql://placeholder:placeholder@localhost:5432/placeholder";
+
+if (databaseUrl) {
+  validateDatabaseUrl(databaseUrl);
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -9,6 +17,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: prismaCliUrl,
   },
 });

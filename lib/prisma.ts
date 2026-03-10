@@ -1,11 +1,18 @@
 import { PrismaClient } from "@prisma/client"
+import { getDatabaseUrl, validateDatabaseUrl } from "@/lib/env"
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
 
 function createPrismaClient() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is missing. Configure your Neon/Postgres connection string.")
+  const databaseUrl = getDatabaseUrl()
+
+  if (!databaseUrl) {
+    throw new Error(
+      "DATABASE_URL is missing. Set DATABASE_URL (preferred) or DATABASEURL/databaseurl in your hosting environment.",
+    )
   }
+
+  validateDatabaseUrl(databaseUrl)
 
   return new PrismaClient()
 }

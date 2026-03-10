@@ -42,7 +42,11 @@ export async function POST(req: Request) {
 
     if (error instanceof Prisma.PrismaClientInitializationError) {
       return Response.json(
-        { error: "Database connection failed. Check DATABASE_URL / Neon connection string." },
+        {
+          error: "Database connection failed.",
+          details:
+            "Verify DATABASE_URL, ensure Neon SSL is enabled (sslmode=require), and URL-encode special password characters like @ as %40.",
+        },
         { status: 500 },
       )
     }
