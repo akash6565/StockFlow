@@ -16,12 +16,29 @@ function isLocalhostUrl(value: string) {
   }
 }
 
-export function getDatabaseUrl() {
-  const databaseUrl = firstDefined(process.env.DATABASE_URL, process.env.DATABASEURL, process.env.databaseurl)
 
-  if (databaseUrl) {
-    process.env.DATABASE_URL = databaseUrl
+function normalizeDatabaseUrl(databaseUrl: string) {
+  try {
+    const parsed = new URL(databaseUrl)
+
+    if (parsed.hostname.includes("neon.tech") && !parsed.searchParams.get("sslmode")) {
+      parsed.searchParams.set("sslmode", "require")
+      return parsed.toString()
+    }
+  } catch {
+    return databaseUrl
   }
+
+  return databaseUrl
+}
+
+export function getDatabaseUrl() {
+  const rawDatabaseUrl = firstDefined(process.env.DATABASE_URL, process.env.DATABASEURL, process.env.databaseurl)
+
+  if (!rawDatabaseUrl) return undefined
+
+  const databaseUrl = normalizeDatabaseUrl(rawDatabaseUrl)
+  process.env.DATABASE_URL = databaseUrl
 
   return databaseUrl
 }

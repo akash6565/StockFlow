@@ -107,7 +107,7 @@ Expected success response:
 { "ok": true, "message": "Database connection successful" }
 ```
 
-If this fails, verify `DATABASE_URL` and Neon network access/SSL settings first.
+If this fails, verify `DATABASE_URL`, Neon network access, and SSL settings first (`sslmode=require`). If your password contains `@`, replace it with `%40` in the URL.
 
 ## Neon Database Notes
 
