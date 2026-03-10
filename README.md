@@ -78,7 +78,8 @@ npm run start
 
 ## Deployment Notes
 
-- Set `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
+- Set `DATABASE_URL` (preferred), `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
+  - Backward-compatible env names `DATABASEURL` and `databaseurl` are also supported at runtime.
 - Run `npm run db:deploy` during release/deploy phase.
 - Protected routes are handled by `proxy.ts`.
 
