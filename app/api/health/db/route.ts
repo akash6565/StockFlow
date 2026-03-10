@@ -1,5 +1,6 @@
 import { getDatabaseUrl, getNextAuthUrl, validateDatabaseUrl, validateNextAuthUrl } from "@/lib/env"
 import { dbHealthcheck } from "@/lib/db"
+import { errorResponse } from "@/lib/api-response"
 
 export async function GET() {
   try {
@@ -23,15 +24,6 @@ export async function GET() {
 
     return Response.json({ ok: true, message: "Database connection successful" })
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown database error"
-
-    return Response.json(
-      {
-        ok: false,
-        message: "Database connection failed",
-        error: message,
-      },
-      { status: 500 },
-    )
+    return errorResponse(error, "Database connection failed")
   }
 }

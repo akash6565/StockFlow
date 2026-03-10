@@ -1,6 +1,7 @@
 import { hash } from "bcrypt"
 import { z } from "zod"
 import { eq, getDb, organizations, settings, users } from "@/lib/db"
+import { errorResponse } from "@/lib/api-response"
 
 const signupSchema = z
   .object({
@@ -23,6 +24,11 @@ export async function POST(req: Request) {
     }
 
     const [organization] = await db.insert(organizations).values({ name: payload.organizationName }).returning()
+
+    if (!organization?.id) {
+      return Response.json({ error: "Failed to create organization" }, { status: 500 })
+    }
+
     await db.insert(settings).values({ orgId: organization.id, defaultLowStock: 5 })
 
     const [user] = await db
@@ -30,13 +36,12 @@ export async function POST(req: Request) {
       .values({ email, password: passwordHash, orgId: organization.id })
       .returning({ id: users.id, email: users.email })
 
-    return Response.json(user, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return Response.json({ error: "Invalid signup input", details: error.flatten() }, { status: 400 })
+    if (!user) {
+      return Response.json({ error: "Failed to create user account" }, { status: 500 })
     }
 
-    console.error("Signup failed", error)
-    return Response.json({ error: "Failed to create account" }, { status: 500 })
+    return Response.json({ message: "Account created", user }, { status: 201 })
+  } catch (error) {
+    return errorResponse(error, "Failed to create account")
   }
 }

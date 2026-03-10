@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { and, eq, getDb, products } from "@/lib/db"
 import { getTenant } from "@/lib/tenant"
+import { errorResponse } from "@/lib/api-response"
 
 const updateSchema = z.object({
   name: z.string().trim().min(1),
@@ -13,22 +14,26 @@ const updateSchema = z.object({
 })
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const orgId = await getTenant()
-  const { id } = await params
-  const db = getDb()
+  try {
+    const orgId = await getTenant()
+    const { id } = await params
+    const db = getDb()
 
-  const [product] = await db.select().from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
-  if (!product) return Response.json({ error: "Not found" }, { status: 404 })
-  return Response.json(product)
+    const [product] = await db.select().from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
+    if (!product) return Response.json({ error: "Not found" }, { status: 404 })
+    return Response.json(product)
+  } catch (error) {
+    return errorResponse(error, "Failed to load product")
+  }
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const orgId = await getTenant()
-  const { id } = await params
-  const db = getDb()
-
   try {
+    const orgId = await getTenant()
+    const { id } = await params
+    const db = getDb()
     const body = updateSchema.parse(await req.json())
+
     const existing = await db.select({ id: products.id }).from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
     if (!existing.length) return Response.json({ error: "Not found" }, { status: 404 })
 
@@ -39,19 +44,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       .returning()
 
     return Response.json(product)
-  } catch {
-    return Response.json({ error: "Invalid payload or duplicate SKU" }, { status: 400 })
+  } catch (error) {
+    return errorResponse(error, "Failed to update product")
   }
 }
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const orgId = await getTenant()
-  const { id } = await params
-  const db = getDb()
+  try {
+    const orgId = await getTenant()
+    const { id } = await params
+    const db = getDb()
 
-  const existing = await db.select({ id: products.id }).from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
-  if (!existing.length) return Response.json({ error: "Not found" }, { status: 404 })
+    const existing = await db.select({ id: products.id }).from(products).where(and(eq(products.id, id), eq(products.orgId, orgId))).limit(1)
+    if (!existing.length) return Response.json({ error: "Not found" }, { status: 404 })
 
-  await db.delete(products).where(eq(products.id, id))
-  return new Response(null, { status: 204 })
+    await db.delete(products).where(eq(products.id, id))
+    return Response.json({ message: "Product deleted" }, { status: 200 })
+  } catch (error) {
+    return errorResponse(error, "Failed to delete product")
+  }
 }
