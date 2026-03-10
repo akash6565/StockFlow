@@ -32,12 +32,32 @@ function normalizeDatabaseUrl(databaseUrl: string) {
   return databaseUrl
 }
 
+function sanitizeDatabaseUrl(rawValue: string) {
+  let sanitized = rawValue.trim()
+
+  // Handle common copy/paste mistakes from dashboards where a whole .env block
+  // (including literal "\\n" separators and comments) is saved into one variable.
+  if (sanitized.includes("\\n")) {
+    sanitized = sanitized.split("\\n")[0]?.trim() ?? sanitized
+  }
+
+  if (sanitized.includes("\n")) {
+    sanitized = sanitized.split("\n")[0]?.trim() ?? sanitized
+  }
+
+  if (sanitized.startsWith('"') && sanitized.endsWith('"')) {
+    sanitized = sanitized.slice(1, -1).trim()
+  }
+
+  return sanitized
+}
+
 export function getDatabaseUrl() {
   const rawDatabaseUrl = firstDefined(process.env.DATABASE_URL, process.env.DATABASEURL, process.env.databaseurl)
 
   if (!rawDatabaseUrl) return undefined
 
-  const databaseUrl = normalizeDatabaseUrl(rawDatabaseUrl)
+  const databaseUrl = normalizeDatabaseUrl(sanitizeDatabaseUrl(rawDatabaseUrl))
   process.env.DATABASE_URL = databaseUrl
 
   return databaseUrl
