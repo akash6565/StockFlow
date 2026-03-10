@@ -5,14 +5,11 @@ import { defineConfig } from "prisma/config";
 import { getDatabaseUrl, validateDatabaseUrl } from "./lib/env";
 
 const databaseUrl = getDatabaseUrl();
+const prismaCliUrl = databaseUrl ?? "postgresql://placeholder:placeholder@localhost:5432/placeholder";
 
-if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is missing for Prisma CLI. Set DATABASE_URL (preferred) or DATABASEURL/databaseurl.",
-  );
+if (databaseUrl) {
+  validateDatabaseUrl(databaseUrl);
 }
-
-validateDatabaseUrl(databaseUrl);
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -20,6 +17,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: databaseUrl,
+    url: prismaCliUrl,
   },
 });
