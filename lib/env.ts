@@ -4,6 +4,18 @@ function firstDefined(...values: Array<string | undefined>) {
   return values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim()
 }
 
+function normalizeVercelUrl(vercelUrl: string) {
+  return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`
+}
+
+function isLocalhostUrl(value: string) {
+  try {
+    return LOCAL_HOSTS.has(new URL(value).hostname)
+  } catch {
+    return false
+  }
+}
+
 export function getDatabaseUrl() {
   const databaseUrl = firstDefined(process.env.DATABASE_URL, process.env.DATABASEURL, process.env.databaseurl)
 
@@ -41,12 +53,18 @@ export function getNextAuthUrl() {
   const vercelUrl = firstDefined(process.env.VERCEL_URL)
 
   if (explicit) {
+    if (process.env.NODE_ENV === "production" && isLocalhostUrl(explicit) && vercelUrl) {
+      const inferred = normalizeVercelUrl(vercelUrl)
+      process.env.NEXTAUTH_URL = inferred
+      return inferred
+    }
+
     process.env.NEXTAUTH_URL = explicit
     return explicit
   }
 
   if (vercelUrl) {
-    const inferred = vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`
+    const inferred = normalizeVercelUrl(vercelUrl)
     process.env.NEXTAUTH_URL = inferred
     return inferred
   }
@@ -64,6 +82,6 @@ export function validateNextAuthUrl(nextAuthUrl: string) {
   }
 
   if (process.env.NODE_ENV === "production" && LOCAL_HOSTS.has(parsed.hostname)) {
-    throw new Error("NEXTAUTH_URL cannot point to localhost in production. Use your deployed HTTPS domain.")
+    console.warn("NEXTAUTH_URL points to localhost in production; authentication callbacks may fail.")
   }
 }

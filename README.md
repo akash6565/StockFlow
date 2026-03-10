@@ -80,7 +80,8 @@ npm run start
 
 - Set `DATABASE_URL` (preferred), `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in your hosting platform.
   - Backward-compatible env names `DATABASEURL` and `databaseurl` are also supported.
-  - In production, `NEXTAUTH_URL` must be your deployed HTTPS domain (not `localhost`).
+  - In production, set `NEXTAUTH_URL` to your deployed HTTPS domain (not `localhost`).
+  - If `NEXTAUTH_URL` is accidentally set to localhost on Vercel, the app now falls back to `VERCEL_URL`.
   - If your DB password has special characters (for example `@`), URL-encode it in `DATABASE_URL`.
 - Run `npm run db:deploy` during release/deploy phase.
 - Protected routes are handled by `proxy.ts`.
