@@ -1,37 +1,35 @@
-import { prisma } from "@/lib/prisma"
+import { z } from "zod"
+import { getPrisma } from "@/lib/prisma"
 import { getTenant } from "@/lib/tenant"
 
-export async function GET(){
+const settingsSchema = z.object({
+  defaultLowStock: z.number().int().min(0),
+})
 
- const orgId = await getTenant()
+export async function GET() {
+  const orgId = await getTenant()
+  const prisma = await getPrisma()
+  const settings = await prisma.setting.findUnique({ where: { orgId } })
 
- const settings =
-  await prisma.setting.findUnique({
-   where:{orgId}
-  })
-
- return Response.json(settings)
+  return Response.json(settings ?? { defaultLowStock: 5 })
 }
 
-export async function POST(req:Request){
+export async function POST(req: Request) {
+  const orgId = await getTenant()
 
- const orgId = await getTenant()
+  const prisma = await getPrisma()
 
- const body = await req.json()
+  try {
+    const body = settingsSchema.parse(await req.json())
 
- const settings =
-  await prisma.setting.upsert({
+    const settings = await prisma.setting.upsert({
+      where: { orgId },
+      update: { defaultLowStock: body.defaultLowStock },
+      create: { orgId, defaultLowStock: body.defaultLowStock },
+    })
 
-   where:{orgId},
-
-   update:{defaultLowStock:body.defaultLowStock},
-
-   create:{
-    orgId,
-    defaultLowStock:body.defaultLowStock
-   }
-
-  })
-
- return Response.json(settings)
+    return Response.json(settings)
+  } catch {
+    return Response.json({ error: "Invalid setting value" }, { status: 400 })
+  }
 }
